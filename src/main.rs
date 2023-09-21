@@ -1,3 +1,4 @@
 fn main() {
-    println!("Hello, world!");
+    let str = String::from("hello, world");
+    println!("{str}");
 }
