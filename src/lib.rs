@@ -1,4 +1,5 @@
 pub mod argument;
+pub mod uploader;
 
 use std::time::Duration;
 
