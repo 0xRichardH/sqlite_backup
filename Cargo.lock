@@ -614,6 +614,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+
+[[package]]
 name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1444,8 +1450,10 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-s3",
+ "dotenvy",
  "rusqlite",
  "tempfile",
+ "time",
  "tokio",
  "uuid",
 ]
@@ -1487,6 +1495,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17f6bb557fd245c28e6411aa56b6403c689ad95061f50e4be16c274e70a17e48"
 dependencies = [
  "deranged",
+ "itoa",
  "serde",
  "time-core",
  "time-macros",

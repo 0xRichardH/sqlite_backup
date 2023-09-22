@@ -2,16 +2,19 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use aws_sdk_s3::{config::Region, primitives::ByteStream, Client};
+use aws_sdk_s3::{
+    config::{Credentials, Region},
+    primitives::ByteStream,
+    Client,
+};
+use time::format_description;
+
+use crate::config::{self};
 
 #[async_trait]
 pub trait Uploader {
     async fn upload_object(&self, path: PathBuf, db_name: &str, extension: &str) -> Result<()>;
 }
-
-// TODO: read the bucket_name and cloudflare_account_id from env
-const BUCKET_NAME: &str = "backup-sqlite";
-const CLOUDFLARE_ACCOUNT_ID: &str = "xxxxx";
 
 pub struct R2Uploader {
     client: Client,
@@ -19,18 +22,30 @@ pub struct R2Uploader {
 }
 
 impl R2Uploader {
-    pub async fn new() -> Self {
-        let endpoint = format!("https://{}.r2.cloudflarestorage.com", CLOUDFLARE_ACCOUNT_ID);
-        let sdk_config = aws_config::load_from_env().await;
-        let config = aws_sdk_s3::config::Builder::from(&sdk_config)
+    pub async fn new(cfg: &config::Config) -> Self {
+        let endpoint = format!(
+            "https://{}.r2.cloudflarestorage.com",
+            cfg.account_id.clone()
+        );
+        let credentials = Credentials::new(
+            cfg.access_key_id.clone(),
+            cfg.secret_access_key.clone(),
+            None,
+            None,
+            "Static",
+        );
+
+        let config = aws_config::from_env()
+            .credentials_provider(credentials)
             .region(Region::new("auto"))
             .endpoint_url(endpoint)
-            .build();
-        let client = Client::from_conf(config);
+            .load()
+            .await;
+        let client = Client::new(&config);
 
         Self {
             client,
-            bucket: String::from(BUCKET_NAME),
+            bucket: cfg.bucket_name.clone(),
         }
     }
 }
@@ -42,7 +57,9 @@ impl Uploader for R2Uploader {
             .await
             .context("create file stream")?;
         let key = uuid::Uuid::new_v4();
-        let object_key = format!("{db_name}/{key}.{extension}");
+        let format = format_description::parse("[year]-[month]-[day]")?;
+        let today = time::OffsetDateTime::now_utc().format(&format)?;
+        let object_key = format!("{db_name}/{today}__{key}.{extension}");
 
         self.client
             .put_object()
