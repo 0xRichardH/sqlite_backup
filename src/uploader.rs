@@ -9,7 +9,9 @@ pub trait Uploader {
     async fn upload_object(&self, path: PathBuf, db_name: &str, extension: &str) -> Result<()>;
 }
 
+// TODO: read the bucket_name and cloudflare_account_id from env
 const BUCKET_NAME: &str = "backup-sqlite";
+const CLOUDFLARE_ACCOUNT_ID: &str = "xxxxx";
 
 pub struct R2Uploader {
     client: Client,
@@ -18,7 +20,7 @@ pub struct R2Uploader {
 
 impl R2Uploader {
     pub async fn new() -> Self {
-        let endpoint = "https://#{cloudflare_account_id}.r2.cloudflarestorage.com".to_string();
+        let endpoint = format!("https://{}.r2.cloudflarestorage.com", CLOUDFLARE_ACCOUNT_ID);
         let sdk_config = aws_config::load_from_env().await;
         let config = aws_sdk_s3::config::Builder::from(&sdk_config)
             .region(Region::new("auto"))
