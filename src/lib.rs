@@ -1,3 +1,5 @@
+pub mod argument;
+
 use std::time::Duration;
 
 use anyhow::{Context, Result};
