@@ -24,11 +24,18 @@ async fn run(arg: &argument::Argument) -> Result<()> {
     // load config/env
     let config = Config::load().context("load env vars")?;
 
+    // tempfile
+    // TODO: Remove unwrap
+    let src_path = Path::new(arg.source_path.as_str());
+    let file_name = src_path.file_name().unwrap();
+    let db_name = src_path.file_stem().unwrap().to_str().unwrap();
+    let db_extension = src_path.extension().unwrap().to_str().unwrap();
+    let tmp_dir = tempfile::tempdir()?;
+    let dest = tmp_dir.path().join(file_name);
+
     // backup data
     let src_conn = Connection::open(arg.source_path.clone()).context("create source connection")?;
-    // TODO: copy to temporary path
-    let dest_path = String::from("./backup.db");
-    SqliteBackup::new(src_conn, dest_path.clone(), |p| {
+    SqliteBackup::new(src_conn, dest.display().to_string(), |p| {
         println!(
             "---Progress---- pagecount: {}, remaining: {}",
             p.pagecount, p.remaining
@@ -38,12 +45,11 @@ async fn run(arg: &argument::Argument) -> Result<()> {
     .context("backup source to destination")?;
 
     // upload
-    let path = Path::new(dest_path.as_str());
     let uploader = R2Uploader::new(&config).await;
-    // TODO: get db_name and extension from the path
-    uploader
-        .upload_object(path.to_path_buf(), "test_db", "db")
-        .await?;
+    uploader.upload_object(dest, db_name, db_extension).await?;
+
+    // close temp dir
+    tmp_dir.close()?;
 
     Ok(())
 }
