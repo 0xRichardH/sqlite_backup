@@ -6,4 +6,4 @@
   - https://github.com/rusqlite/rusqlite
   - https://docs.rs/rusqlite/0.29.0/rusqlite/backup/index.html
 - [ ] Restore SQLite backup
-- [ ] Update backup file to Google Drive
+- [x] Update backup file to ~Google Drive~ **Cloudflare R2**

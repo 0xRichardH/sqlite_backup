@@ -1,10 +1,12 @@
 pub mod argument;
 pub mod config;
+pub mod errors;
 pub mod uploader;
 
-use std::time::Duration;
+use std::{ffi::OsStr, path::Path, time::Duration};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
+use errors::SqliteBackupError;
 use rusqlite::{
     backup::{self, Progress},
     Connection,
@@ -12,6 +14,44 @@ use rusqlite::{
 
 pub trait Backup {
     fn backup(&self) -> Result<()>;
+}
+
+pub struct SqliteSourceFile<'a> {
+    pub path: &'a Path,
+    pub filename: &'a str,
+    pub db_name: &'a str,
+    pub db_extension: &'a str,
+}
+
+impl<'a> SqliteSourceFile<'a> {
+    pub fn from(src_path: &'a str) -> Result<Self> {
+        let path = Path::new(src_path);
+        let filename = convert_os_str_result_to_str(path.file_name())?;
+        let db_name = convert_os_str_result_to_str(path.file_stem())?;
+        let db_extension = convert_os_str_result_to_str(path.extension())?;
+
+        Ok(Self {
+            path,
+            filename,
+            db_name,
+            db_extension,
+        })
+    }
+}
+
+fn convert_os_str_result_to_str(result: Option<&OsStr>) -> Result<&str> {
+    if result.is_none() {
+        bail!(SqliteBackupError::SourceFileError(
+            "failed to parse source file".to_string()
+        ));
+    }
+    if let Some(s) = result.unwrap().to_str() {
+        return Ok(s);
+    }
+
+    bail!(SqliteBackupError::SourceFileError(
+        "failed to convert source file to str".to_string()
+    ));
 }
 
 pub struct SqliteBackup {

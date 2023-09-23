@@ -4,37 +4,33 @@ use sqlite_backup::{
     argument,
     config::Config,
     uploader::{R2Uploader, Uploader},
-    Backup, SqliteBackup,
+    Backup, SqliteBackup, SqliteSourceFile,
 };
-use std::{env, path::Path};
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let cfg = Config::load().context("load env vars")?;
     let args = env::args().collect::<Vec<String>>();
     match argument::Argument::build(&args) {
-        Ok(arg) => run(&arg).await?,
+        Ok(arg) => run(&arg, &cfg).await?,
 
         Err(err) => eprintln!("Application Error: {}", err),
     }
 
+    println!("Done");
+
     Ok(())
 }
 
-async fn run(arg: &argument::Argument) -> Result<()> {
-    // load config/env
-    let config = Config::load().context("load env vars")?;
-
-    // tempfile
-    // TODO: Remove unwrap
-    let src_path = Path::new(arg.source_path.as_str());
-    let file_name = src_path.file_name().unwrap();
-    let db_name = src_path.file_stem().unwrap().to_str().unwrap();
-    let db_extension = src_path.extension().unwrap().to_str().unwrap();
+async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
+    // create temp dir
     let tmp_dir = tempfile::tempdir()?;
-    let dest = tmp_dir.path().join(file_name);
 
     // backup data
-    let src_conn = Connection::open(arg.source_path.clone()).context("create source connection")?;
+    let src_file = SqliteSourceFile::from(arg.source_path.as_str()).context("parse source path")?;
+    let src_conn = Connection::open(src_file.path).context("create source connection")?;
+    let dest = tmp_dir.path().join(src_file.filename);
     SqliteBackup::new(src_conn, dest.display().to_string(), |p| {
         println!(
             "---Progress---- pagecount: {}, remaining: {}",
@@ -45,8 +41,14 @@ async fn run(arg: &argument::Argument) -> Result<()> {
     .context("backup source to destination")?;
 
     // upload
-    let uploader = R2Uploader::new(&config).await;
-    uploader.upload_object(dest, db_name, db_extension).await?;
+    let uploader = R2Uploader::new(cfg).await;
+    uploader
+        .upload_object(
+            dest,
+            format!("sqlite__{}", src_file.db_name).as_str(),
+            src_file.db_extension,
+        )
+        .await?;
 
     // close temp dir
     tmp_dir.close()?;
