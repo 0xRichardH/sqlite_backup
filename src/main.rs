@@ -2,9 +2,9 @@ use anyhow::{Context, Result};
 use rusqlite::Connection;
 use sqlite_backup::{
     argument,
+    backup::{Backup, SqliteBackup, SqliteSourceFile},
     config::Config,
     uploader::{R2Uploader, Uploader},
-    Backup, SqliteBackup, SqliteSourceFile,
 };
 use std::env;
 
