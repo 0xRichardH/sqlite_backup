@@ -24,11 +24,9 @@ jobs:
       - name: Print version
         run: "echo '${{ steps.release.outputs.version }}'"
 
-      - name: Set output variables
-        id: vars
-        run: |
-          changelogs="$(cog changelog --at ${{ steps.release.outputs.version }} -t full_hash | base64 --wrap=0)"
-          echo "changelogs=$changelogs" >> "$GITHUB_OUTPUT"
+      - name: Generate Latest Changelog
+        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > ./docs/LATEST_CHANGELOG.md
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
@@ -38,11 +36,11 @@ jobs:
           base: main
           branch: "release/${{ steps.release.outputs.version }}"
           commit-message: "release(version): bump to ${{ steps.release.outputs.version }}"
-          title: Bump to ${{ steps.release.outputs.version }}
-          body: $(echo ${{ steps.vars.outputs.changelogs }} | base64 -d)
+          title: "release(version): Bump to ${{ steps.release.outputs.version }}"
+          body-path: ./docs/LATEST_CHANGELOG.md
 
       - name: Upload github release
         uses: softprops/action-gh-release@v1
         with:
-          body: $(echo ${{ steps.vars.outputs.changelogs }} | base64 -d)
+          body_path: ./docs/LATEST_CHANGELOG.md
           tag_name: ${{ steps.release.outputs.version }}
