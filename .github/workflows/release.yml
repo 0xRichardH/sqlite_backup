@@ -33,6 +33,7 @@ jobs:
           draft: false
           delete-branch: true
           signoff: false
+          base: main
           branch: "release/${{ steps.release.outputs.version }}"
 
       - name: Upload github release
