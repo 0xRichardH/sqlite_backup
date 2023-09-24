@@ -7,7 +7,7 @@ on:
     branches:
       - "release/**"
     paths:
-      - "Cargo.toml"
+      - "./build/version"
 
 jobs:
   release:
