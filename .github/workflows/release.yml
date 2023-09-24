@@ -6,8 +6,6 @@ on:
       - closed
     branches:
       - "release/**"
-    paths:
-      - "./build/version"
 
 jobs:
   release:
