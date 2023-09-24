@@ -4,8 +4,10 @@ ignore_merge_commits = true
 branch_whitelist = ["main"]
 pre_bump_hooks = [
   "echo {{version}}",
+  "cargo set-version {{version}}"
 ]
-post_bump_hooks = []
+post_bump_hooks = [
+]
 
 [commit_types]
 hotfix = { changelog_title = "Hotfixes" }
