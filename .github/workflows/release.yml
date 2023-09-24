@@ -19,13 +19,21 @@ jobs:
         with:
           release: true
           git-user: "release-bot"
-          git-user-email: "richard@0xdev.dev"
+          git-user-email: "release-bot@0xdev.dev"
 
       - name: Print version
         run: "echo '${{ steps.release.outputs.version }}'"
 
       - name: Generate Changelog
         run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > GITHUB_CHANGELOG.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          draft: false
+          delete-branch: true
+          signoff: false
+          branch: "release/${{ steps.release.outputs.version }}"
 
       - name: Upload github release
         uses: softprops/action-gh-release@v1

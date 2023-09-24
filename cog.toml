@@ -6,8 +6,9 @@ pre_bump_hooks = [
   "echo {{version}}",
 ]
 post_bump_hooks = [
-  "git push",
   "git push origin v{{version}}",
+  "git checkout -b release/v{{version}}",
+  "git push origin release/v{{version}}",
 ]
 
 [commit_types]
