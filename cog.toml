@@ -1,7 +1,7 @@
 tag_prefix = "v"
 from_latest_tag = true
 ignore_merge_commits = true
-branch_whitelist = ["main"]
+branch_whitelist = ["main", "fix/ci__fix_release_flow"]
 pre_bump_hooks = [
   "echo {{version}}",
 ]

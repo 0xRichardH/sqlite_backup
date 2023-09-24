@@ -28,8 +28,7 @@ jobs:
         id: vars
         run: |
           changelogs="$(cog changelog --at ${{ steps.release.outputs.version }} -t full_hash)"
-          echo changelogs=$changelogs
-          echo "echo changelogs=$changelogs" >> "$GITHUB_OUTPUT"
+          echo "changelogs={$changelogs}" >> "$GITHUB_OUTPUT"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
