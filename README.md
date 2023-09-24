@@ -17,5 +17,5 @@ docker run -ti --rm -e APP_ENV=prod --env-file .env -v "$PWD:/app/file" sqlite_b
 ```
 
 ```
-
+docker run -ti --rm -e APP_ENV=prod --env-file .env -v "$PWD:/app/file" ghcr.io/0xrichardh/sqlite_backup:main ./file/source.db
 ```
