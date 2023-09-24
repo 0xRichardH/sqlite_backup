@@ -1,15 +1,14 @@
 name: Release
 
 on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - "release/**"
+  push:
+    branches: ["main"]
+    paths:
+      - "build/version"
 
 jobs:
   release:
-    if: github.event.pull_request.merged == true
+    if: startsWith(github.event.head_commit.message, "release(version):")
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
