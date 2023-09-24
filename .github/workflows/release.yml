@@ -1,46 +1,30 @@
-name: Release
+Name: Release
 
 on:
-  workflow_dispatch:
-    branches: ["fix/ci__fix_release_flow"]
+  pull_request:
+    types:
+      - closed
+    branches:
+      - "release/**"
+    paths:
+      - "Cargo.toml"
 
 jobs:
   release:
-    name: Perform release
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: Cocogitto release
-        id: release
-        uses: oknozor/cocogitto-action@v3.4
-        with:
-          release: true
-          git-user: "release-bot"
-          git-user-email: "release-bot@0xdev.dev"
-
-      - name: Print version
-        run: "echo '${{ steps.release.outputs.version }}'"
-
-      - name: Generate Latest Changelog
-        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > ./docs/LATEST_CHANGELOG.md
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          draft: false
-          delete-branch: true
-          signoff: false
-          base: main
-          branch: "release/${{ steps.release.outputs.version }}"
-          commit-message: "release(version): bump to ${{ steps.release.outputs.version }}"
-          title: "release(version): Bump to ${{ steps.release.outputs.version }}"
-          body-path: ./docs/LATEST_CHANGELOG.md
+      - name: Set output variables
+        id: vars
+        run: |
+          version="$(cat ./build/version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Upload github release
         uses: softprops/action-gh-release@v1
         with:
           body_path: ./docs/LATEST_CHANGELOG.md
-          tag_name: ${{ steps.release.outputs.version }}
+          tag_name: ${{ steps.vars.outputs.version }}

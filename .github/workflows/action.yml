@@ -1,0 +1,43 @@
+name: Action - Trigger Release
+
+on:
+  workflow_dispatch:
+    branches: ["fix/ci__fix_release_flow"]
+
+jobs:
+  bump:
+    name: Bump version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Cocogitto release
+        id: release
+        uses: oknozor/cocogitto-action@v3.4
+        with:
+          release: true
+          git-user: "release-bot"
+          git-user-email: "release-bot@0xdev.dev"
+
+      - name: Print version
+        run: "echo '${{ steps.release.outputs.version }}'"
+
+      - name: Generate Latest Changelog
+        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > ./docs/LATEST_CHANGELOG.md
+
+      - name: Generate current version
+        run: echo ${{ steps.release.outputs.version }} > ./build/version
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          draft: false
+          delete-branch: true
+          signoff: false
+          base: main
+          branch: "release/${{ steps.release.outputs.version }}"
+          commit-message: "release(version): bump to ${{ steps.release.outputs.version }}"
+          title: "release(version): Bump to ${{ steps.release.outputs.version }}"
+          body-path: ./docs/LATEST_CHANGELOG.md
