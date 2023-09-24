@@ -24,8 +24,11 @@ jobs:
       - name: Print version
         run: "echo '${{ steps.release.outputs.version }}'"
 
-      - name: Generate Changelog
-        run: cog changelog --at ${{ steps.release.outputs.version }} -t full_hash > GITHUB_CHANGELOG.md
+      - name: Set output variables
+        id: vars
+        run: |
+          changelogs="$(cog changelog --at ${{ steps.release.outputs.version }} -t full_hash)"
+          echo "changelogs=$changelogs" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
@@ -35,9 +38,12 @@ jobs:
           signoff: false
           base: main
           branch: "release/${{ steps.release.outputs.version }}"
+          commit-message: "release(version): bump to ${{ steps.release.outputs.version }}"
+          title: Bump to ${{ steps.release.outputs.version }}
+          body: ${{ steps.vars.outputs.changelogs }}
 
       - name: Upload github release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: GITHUB_CHANGELOG.md
+          body: ${{ steps.vars.outputs.changelogs }}
           tag_name: ${{ steps.release.outputs.version }}
