@@ -2,7 +2,7 @@ name: Action - Trigger Release
 
 on:
   workflow_dispatch:
-    branches: ["fix/ci__fix_release_flow"]
+    branches: ["main"]
 
 jobs:
   bump:
