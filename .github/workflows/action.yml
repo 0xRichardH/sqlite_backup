@@ -13,6 +13,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install cargo-edit from crates.io
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-edit
+
       - name: Cocogitto release
         id: release
         uses: oknozor/cocogitto-action@v3.4
