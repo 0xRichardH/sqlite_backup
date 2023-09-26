@@ -37,14 +37,8 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     .context("backup source to destination")?;
 
     // upload
-    let uploader = R2Uploader::new(cfg).await;
-    uploader
-        .upload_object(
-            dest,
-            format!("sqlite__{}", src_file.db_name).as_str(),
-            src_file.db_extension,
-        )
-        .await?;
+    let uploader = R2Uploader::new(arg, cfg).await;
+    uploader.upload_object(dest, src_file.filename).await?;
 
     // close temp dir
     tmp_dir.close()?;

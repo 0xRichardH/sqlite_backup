@@ -15,23 +15,14 @@ pub trait Backup {
 pub struct SqliteSourceFile<'a> {
     pub path: &'a Path,
     pub filename: &'a str,
-    pub db_name: &'a str,
-    pub db_extension: &'a str,
 }
 
 impl<'a> SqliteSourceFile<'a> {
     pub fn from(src_path: &'a str) -> Result<Self> {
         let path = Path::new(src_path);
         let filename = convert_os_str_result_to_str(path.file_name())?;
-        let db_name = convert_os_str_result_to_str(path.file_stem())?;
-        let db_extension = convert_os_str_result_to_str(path.extension())?;
 
-        Ok(Self {
-            path,
-            filename,
-            db_name,
-            db_extension,
-        })
+        Ok(Self { path, filename })
     }
 }
 
