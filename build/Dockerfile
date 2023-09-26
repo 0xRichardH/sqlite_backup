@@ -26,7 +26,7 @@ FROM debian:bullseye-slim
 
 RUN useradd -c 'app user' app
 
-RUN apt update && apt install ca-certificates sqlite3 -y && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install ca-certificates sqlite3 cron -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
