@@ -28,6 +28,9 @@ RUN useradd -c 'app user' app
 
 RUN apt update && apt install ca-certificates sqlite3 cron -y && rm -rf /var/lib/apt/lists/*
 
+# resolve cron permission issue
+RUN rm -rf /etc/cron.*/* && chmod u+s /usr/sbin/cron
+
 WORKDIR /app
 
 # Copy our build
