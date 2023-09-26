@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.2.0 - 2023-09-26
+#### Documentation
+- update todo - (e38ffe7) - Richard Hao
+- update readme - (0b4a100) - Richard Hao
+#### Features
+- **(enhancement)** Add Project Name and App Env to R2 key (#19) - (33758f5) - Richard Hao
+#### Miscellaneous Chores
+- **(deps)** bump time from 0.3.28 to 0.3.29 (#18) - (ddd855f) - dependabot[bot]
+- Create LICENSE - (a544dce) - Richard Hao
+
+- - -
+
 ## v0.1.0 - 2023-09-24
 #### Bug Fixes
 - **(ci)** fix the workflow name - (2788518) - Richard Hao
