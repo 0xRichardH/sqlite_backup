@@ -3,8 +3,8 @@ use std::{env, fmt::Display};
 
 use anyhow::Result;
 
-#[derive(PartialEq)]
-enum AppEnv {
+#[derive(PartialEq, Debug)]
+pub enum AppEnv {
     Prod,
     Dev,
     Test,
@@ -22,6 +22,7 @@ impl Display for AppEnv {
 
 #[derive(Debug)]
 pub struct Config {
+    pub app_env: AppEnv,
     pub bucket_name: String,
     pub account_id: String,
     pub access_key_id: String,
@@ -47,6 +48,7 @@ impl Config {
         }
 
         let config = Self {
+            app_env,
             bucket_name: env::var("BUCKET_NAME")?,
             account_id: env::var("ACCOUNT_ID")?,
             access_key_id: env::var("ACCESS_KEY_ID")?,

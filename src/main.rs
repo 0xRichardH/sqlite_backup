@@ -1,22 +1,18 @@
 use anyhow::{Context, Result};
+use clap::Parser;
 use rusqlite::Connection;
 use sqlite_backup::{
-    argument,
+    argument::{self, Argument},
     backup::{Backup, SqliteBackup, SqliteSourceFile},
     config::Config,
     uploader::{R2Uploader, Uploader},
 };
-use std::env;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cfg = Config::load().context("load env vars")?;
-    let args = env::args().collect::<Vec<String>>();
-    match argument::Argument::build(&args) {
-        Ok(arg) => run(&arg, &cfg).await?,
-
-        Err(err) => eprintln!("Application Error: {}", err),
-    }
+    let args = Argument::parse();
+    run(&args, &cfg).await?;
 
     println!("Done");
 
@@ -28,7 +24,7 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     let tmp_dir = tempfile::tempdir()?;
 
     // backup data
-    let src_file = SqliteSourceFile::from(arg.source_path.as_str()).context("parse source path")?;
+    let src_file = SqliteSourceFile::from(arg.db.as_str()).context("parse source path")?;
     let src_conn = Connection::open(src_file.path).context("create source connection")?;
     let dest = tmp_dir.path().join(src_file.filename);
     SqliteBackup::new(src_conn, dest.display().to_string(), |p| {
@@ -41,14 +37,8 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     .context("backup source to destination")?;
 
     // upload
-    let uploader = R2Uploader::new(cfg).await;
-    uploader
-        .upload_object(
-            dest,
-            format!("sqlite__{}", src_file.db_name).as_str(),
-            src_file.db_extension,
-        )
-        .await?;
+    let uploader = R2Uploader::new(arg, cfg).await;
+    uploader.upload_object(dest, src_file.filename).await?;
 
     // close temp dir
     tmp_dir.close()?;

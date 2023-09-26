@@ -1,20 +1,14 @@
-use anyhow::{bail, Result};
+use clap::Parser;
 
-use crate::errors::SqliteBackupError;
-
+/// Easily to backup your SQLite database
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct Argument {
-    pub source_path: String,
-}
+    /// The project name
+    #[arg(long, default_value = "default")]
+    pub project_name: String,
 
-impl Argument {
-    pub fn build(args: &[String]) -> Result<Self> {
-        if let Some(source_path) = args.get(1) {
-            let argument = Self {
-                source_path: source_path.clone(),
-            };
-            Ok(argument)
-        } else {
-            bail!(SqliteBackupError::NoSourceFileError);
-        }
-    }
+    /// The path to the database to backup
+    #[arg(long)]
+    pub db: String,
 }
