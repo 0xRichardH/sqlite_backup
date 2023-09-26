@@ -2,8 +2,9 @@ name: Build docker image
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: ["main"]
+    paths:
+      - "build/version"
 
 permissions:
   packages: write
