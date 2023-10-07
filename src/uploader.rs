@@ -84,6 +84,11 @@ impl Uploader for R2Uploader {
     }
 
     async fn retain(&self, count: u8, src_name: &str) -> Result<()> {
+        let count = (count as i8) - 1;
+        if count < 0 {
+            return Ok(());
+        }
+
         let key_prefix = self.object_key_prefix(src_name);
         let result = self
             .client
