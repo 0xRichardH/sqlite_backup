@@ -11,4 +11,8 @@ pub struct Argument {
     /// The path to the database to backup
     #[arg(long)]
     pub db: String,
+
+    /// Data retention: will keep recent `n` record, the max is 255
+    #[arg(long, default_value = "30")]
+    pub data_retention: u8,
 }

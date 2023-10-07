@@ -38,7 +38,12 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
 
     // upload
     let uploader = R2Uploader::new(arg, cfg).await;
-    uploader.upload_object(dest, src_file.filename).await?;
+    let (upload_res, retain_res) = tokio::join!(
+        uploader.upload_object(dest, src_file.filename),
+        uploader.retain(arg.data_retention, src_file.filename)
+    );
+    upload_res?;
+    retain_res?;
 
     // close temp dir
     tmp_dir.close()?;
