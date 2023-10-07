@@ -84,11 +84,6 @@ impl Uploader for R2Uploader {
     }
 
     async fn retain(&self, count: u8, src_name: &str) -> Result<()> {
-        let count = (count as i8) - 1;
-        if count < 0 {
-            return Ok(());
-        }
-
         let key_prefix = self.object_key_prefix(src_name);
         let result = self
             .client
@@ -105,14 +100,14 @@ impl Uploader for R2Uploader {
         }
 
         if let Some(objects) = result.contents() {
-            let count = count as usize;
+            let deleted_count = objects.len() - count as usize;
             let mut objects = objects.to_vec();
             objects.sort_by(|a, b| {
                 let last_modified_a = a.last_modified().unwrap();
                 let last_modified_b = b.last_modified().unwrap();
                 last_modified_a.cmp(last_modified_b)
             });
-            let deleted_objects = &objects[..count]
+            let deleted_objects = &objects[..deleted_count]
                 .iter()
                 .map(|obj| {
                     let key = obj.key().unwrap_or_default().to_string();
