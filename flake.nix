@@ -31,7 +31,11 @@
     {
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
+          buildInputs = with pkgs; [] ++ (with pkgs.darwin.apple_sdk.frameworks; pkgs.lib.optionals pkgs.stdenv.isDarwin [
+              Security
+          ]);
           packages = with pkgs; [
+            sqlite
             rustToolchain
             openssl
             pkg-config

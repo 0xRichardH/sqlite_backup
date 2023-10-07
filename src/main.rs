@@ -39,6 +39,9 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     // upload
     let uploader = R2Uploader::new(arg, cfg).await;
     uploader.upload_object(dest, src_file.filename).await?;
+    uploader
+        .retain(arg.data_retention, src_file.filename)
+        .await?;
 
     // close temp dir
     tmp_dir.close()?;
