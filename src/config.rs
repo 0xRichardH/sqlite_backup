@@ -8,6 +8,7 @@ pub enum AppEnv {
     Prod,
     Dev,
     Test,
+    CI,
 }
 
 impl Display for AppEnv {
@@ -16,6 +17,7 @@ impl Display for AppEnv {
             AppEnv::Prod => write!(f, "prod"),
             AppEnv::Dev => write!(f, "dev"),
             AppEnv::Test => write!(f, "test"),
+            AppEnv::CI => write!(f, "ci"),
         }
     }
 }
@@ -36,6 +38,7 @@ impl Config {
             Ok(v) => match v.as_str() {
                 "prod" => AppEnv::Prod,
                 "test" => AppEnv::Test,
+                "ci" => AppEnv::CI,
                 _ => AppEnv::Dev,
             },
             _ => AppEnv::Dev,
@@ -53,7 +56,9 @@ impl Config {
                 from_filename_override(".env.test").expect(".env.test file not found");
             }
 
-            _ => {}
+            _ => {
+                // load environment variables from the system env
+            }
         }
 
         let config = Self {
