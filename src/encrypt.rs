@@ -51,10 +51,9 @@ pub async fn gpg_encrypt(input: &str, output: &str, password: &str) -> Result<()
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::File,
-        io::{Cursor, Read, Write},
-    };
+    use std::io::Cursor;
+    use tokio::fs::File;
+    use tokio::io::AsyncWriteExt;
 
     use anyhow::Result;
     use pgp::Deserializable;
@@ -70,8 +69,8 @@ mod tests {
         let output = tmp_dir.path().join("output.txt.gpg").display().to_string();
 
         // 1. create to_be_encrypted_file
-        let mut f = File::create(input.clone())?;
-        f.write_all(b"hello world")?;
+        let mut f = File::create(input.clone()).await?;
+        f.write_all(b"hello world").await?;
 
         // 2. encrypt the file
         gpg_encrypt(&input, &output, "passcode")
@@ -79,9 +78,9 @@ mod tests {
             .context("encrypt the file")?;
 
         // 3. decrypt the file and verify the result
-        let mut out_f = File::open(output.clone())?;
+        let mut out_f = File::open(output.clone()).await?;
         let mut buf = Vec::new();
-        out_f.read_to_end(&mut buf)?;
+        out_f.read_to_end(&mut buf).await?;
         let msg = Message::from_armor_single(Cursor::new(&buf)).unwrap().0;
         let decrypted = msg
             .decrypt_with_password(|| "passcode".to_string())
