@@ -5,6 +5,10 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
+pub fn gpg_filename(filename: &str) -> String {
+    format!("{}.gpg", filename)
+}
+
 // GPG Symmetric Encryption with Password
 // Please use the following command to decrypt the file
 // gpg -o backup.tar.gz -d backup.tar.gz.gpg

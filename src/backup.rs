@@ -77,7 +77,7 @@ impl<'a> Backup for SqliteBackup<'a> {
 
         // 2. encrypt the dest file if GPG_PASSPHRASE is configured
         if self.cfg.gpg_passphrase.is_some() {
-            let encrypted_dest = format!("{}.gpg", self.dest);
+            let encrypted_dest = encrypt::gpg_filename(&self.dest);
             let passphrase = self
                 .cfg
                 .gpg_passphrase

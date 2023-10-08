@@ -5,6 +5,7 @@ use sqlite_backup::{
     argument::{self, Argument},
     backup::{Backup, SqliteBackup, SqliteSourceFile},
     config::Config,
+    encrypt,
     uploader::{R2Uploader, Uploader},
 };
 
@@ -36,11 +37,18 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     .backup()
     .context("backup source to destination")?;
 
+    // get source file name
+    let src_filename = if cfg.gpg_passphrase.is_some() {
+        encrypt::gpg_filename(src_file.filename)
+    } else {
+        src_file.filename.to_string()
+    };
+
     // upload
     let uploader = R2Uploader::new(arg, cfg).await;
     let (upload_res, retain_res) = tokio::join!(
-        uploader.upload_object(dest, src_file.filename),
-        uploader.retain(arg.data_retention, src_file.filename)
+        uploader.upload_object(dest, src_filename.as_str()),
+        uploader.retain(arg.data_retention, src_filename.as_str())
     );
     upload_res?;
     retain_res?;
