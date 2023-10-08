@@ -1,5 +1,5 @@
-use dotenvy::dotenv;
-use std::{env, fmt::Display};
+use dotenvy::{dotenv, from_filename_override};
+use std::{env, ffi::OsString, fmt::Display};
 
 use anyhow::Result;
 
@@ -27,6 +27,7 @@ pub struct Config {
     pub account_id: String,
     pub access_key_id: String,
     pub secret_access_key: String,
+    pub gpg_passphrase: Option<OsString>,
 }
 
 impl Config {
@@ -42,9 +43,17 @@ impl Config {
 
         println!("Running in {app_env} mode");
 
-        if app_env == AppEnv::Dev {
-            // load environment variables from .env file
-            dotenv().expect(".env file not found");
+        match app_env {
+            AppEnv::Dev => {
+                // load environment variables from .env file
+                dotenv().expect(".env file not found");
+            }
+
+            AppEnv::Test => {
+                from_filename_override(".env.test").expect(".env.test file not found");
+            }
+
+            _ => {}
         }
 
         let config = Self {
@@ -53,6 +62,7 @@ impl Config {
             account_id: env::var("ACCOUNT_ID")?,
             access_key_id: env::var("ACCESS_KEY_ID")?,
             secret_access_key: env::var("SECRET_ACCESS_KEY")?,
+            gpg_passphrase: env::var_os("GPG_PASSPHRASE"),
         };
         Ok(config)
     }

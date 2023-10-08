@@ -27,7 +27,7 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     let src_file = SqliteSourceFile::from(arg.db.as_str()).context("parse source path")?;
     let src_conn = Connection::open(src_file.path).context("create source connection")?;
     let dest = tmp_dir.path().join(src_file.filename);
-    SqliteBackup::new(src_conn, dest.display().to_string(), |p| {
+    SqliteBackup::new(cfg, src_conn, dest.display().to_string(), |p| {
         println!(
             "---Progress---- pagecount: {}, remaining: {}",
             p.pagecount, p.remaining

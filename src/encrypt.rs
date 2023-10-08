@@ -5,6 +5,9 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
+// GPG Symmetric Encryption with Password
+// Please use the following command to decrypt the file
+// gpg -o backup.tar.gz -d backup.tar.gz.gpg
 pub async fn gpg_encrypt(input: &str, output: &str, password: &str) -> Result<()> {
     // 1. read source file to buffer
     let mut f = File::open(input)

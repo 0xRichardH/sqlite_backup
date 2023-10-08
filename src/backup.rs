@@ -6,7 +6,7 @@ use rusqlite::{
     Connection,
 };
 
-use crate::errors::SqliteBackupError;
+use crate::{config::Config, encrypt, errors::SqliteBackupError};
 
 pub trait Backup {
     fn backup(&self) -> Result<()>;
@@ -41,15 +41,22 @@ impl<'a> SqliteSourceFile<'a> {
     }
 }
 
-pub struct SqliteBackup {
+pub struct SqliteBackup<'a> {
+    cfg: &'a Config,
     src_conn: rusqlite::Connection,
     dest: String,
     progress: fn(Progress),
 }
 
-impl SqliteBackup {
-    pub fn new(src_conn: rusqlite::Connection, dest: String, progress: fn(Progress)) -> Self {
+impl<'a> SqliteBackup<'a> {
+    pub fn new(
+        cfg: &'a Config,
+        src_conn: rusqlite::Connection,
+        dest: String,
+        progress: fn(Progress),
+    ) -> Self {
         Self {
+            cfg,
             src_conn,
             dest,
             progress,
@@ -57,8 +64,9 @@ impl SqliteBackup {
     }
 }
 
-impl Backup for SqliteBackup {
+impl<'a> Backup for SqliteBackup<'a> {
     fn backup(&self) -> Result<()> {
+        // 1. backup the db to file
         let mut dest_conn =
             Connection::open(self.dest.clone()).context("open backup destination")?;
         let online_backup =
@@ -67,6 +75,27 @@ impl Backup for SqliteBackup {
             .run_to_completion(5, Duration::from_millis(250), Some(self.progress))
             .context("run backup")?;
 
+        // 2. encrypt the dest file if GPG_PASSPHRASE is configured
+        if self.cfg.gpg_passphrase.is_some() {
+            let encrypted_dest = format!("{}.gpg", self.dest);
+            let passphrase = self
+                .cfg
+                .gpg_passphrase
+                .clone()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+
+            let tokio_runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()?;
+            tokio_runtime.block_on(encrypt::gpg_encrypt(
+                self.dest.as_str(),
+                encrypted_dest.as_str(),
+                passphrase.as_str(),
+            ))?;
+        }
+
         Ok(())
     }
 }
@@ -74,6 +103,8 @@ impl Backup for SqliteBackup {
 #[cfg(test)]
 mod tests {
     use tempfile::tempdir;
+
+    use crate::config;
 
     use super::*;
 
@@ -97,7 +128,8 @@ mod tests {
         let dest = tmp_dir.path().join("backup.db").display().to_string();
 
         // backup
-        let backup = SqliteBackup::new(src_conn, dest.clone(), |p| {
+        let cfg = config::Config::load()?;
+        let backup = SqliteBackup::new(&cfg, src_conn, dest.clone(), |p| {
             println!(
                 "---Progress---- pagecount: {}, remaining: {}",
                 p.pagecount, p.remaining
