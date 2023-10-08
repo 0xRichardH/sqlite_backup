@@ -5,7 +5,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
-pub async fn gpg_encrypt(input: &str, output: &str) -> Result<()> {
+pub async fn gpg_encrypt(input: &str, output: &str, password: &str) -> Result<()> {
     // 1. read source file to buffer
     let mut f = File::open(input)
         .await
@@ -22,7 +22,7 @@ pub async fn gpg_encrypt(input: &str, output: &str) -> Result<()> {
         Message::new_literal_bytes(input, &buf).compress(pgp::types::CompressionAlgorithm::ZLIB)?;
     let encrypted = msg
         .encrypt_with_password(&mut rng, s2k, SymmetricKeyAlgorithm::AES128, || {
-            "password".to_string()
+            password.into()
         })
         .context("encrypt with password")?;
 
@@ -67,7 +67,7 @@ mod tests {
         f.write_all(b"hello world")?;
 
         // 2. encrypt the file
-        gpg_encrypt(&input, &output)
+        gpg_encrypt(&input, &output, "passcode")
             .await
             .context("encrypt the file")?;
 
@@ -77,14 +77,13 @@ mod tests {
         out_f.read_to_end(&mut buf)?;
         let msg = Message::from_armor_single(Cursor::new(&buf)).unwrap().0;
         let decrypted = msg
-            .decrypt_with_password(|| "password".to_string())
+            .decrypt_with_password(|| "passcode".to_string())
             .unwrap()
             .next()
             .unwrap()
             .unwrap();
 
         let decrypted_bytes = decrypted.get_content()?.unwrap();
-
         assert_eq!(decrypted_bytes, b"hello world");
 
         // 4. delete the temp directory
