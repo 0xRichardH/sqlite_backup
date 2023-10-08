@@ -20,25 +20,25 @@ pub struct SqliteSourceFile<'a> {
 impl<'a> SqliteSourceFile<'a> {
     pub fn from(src_path: &'a str) -> Result<Self> {
         let path = Path::new(src_path);
-        let filename = convert_os_str_result_to_str(path.file_name())?;
+        let filename = Self::convert_os_str_result_to_str(path.file_name())?;
 
         Ok(Self { path, filename })
     }
-}
 
-fn convert_os_str_result_to_str(result: Option<&OsStr>) -> Result<&str> {
-    if result.is_none() {
+    fn convert_os_str_result_to_str(result: Option<&OsStr>) -> Result<&str> {
+        if result.is_none() {
+            bail!(SqliteBackupError::SourceFileError(
+                "failed to parse source file".to_string()
+            ));
+        }
+        if let Some(s) = result.unwrap().to_str() {
+            return Ok(s);
+        }
+
         bail!(SqliteBackupError::SourceFileError(
-            "failed to parse source file".to_string()
+            "failed to convert source file to str".to_string()
         ));
     }
-    if let Some(s) = result.unwrap().to_str() {
-        return Ok(s);
-    }
-
-    bail!(SqliteBackupError::SourceFileError(
-        "failed to convert source file to str".to_string()
-    ));
 }
 
 pub struct SqliteBackup {
