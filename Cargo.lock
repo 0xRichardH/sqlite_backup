@@ -2306,6 +2306,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "pgp",
+ "rand",
  "rusqlite",
  "tempfile",
  "time",
