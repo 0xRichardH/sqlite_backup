@@ -86,14 +86,12 @@ impl<'a> Backup for SqliteBackup<'a> {
                 .to_string_lossy()
                 .to_string();
 
-            let tokio_runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()?;
-            tokio_runtime.block_on(encrypt::gpg_encrypt(
+            encrypt::gpg_encrypt(
                 self.dest.as_str(),
                 encrypted_dest.as_str(),
                 passphrase.as_str(),
-            ))?;
+            )
+            .context("gpg encrypt")?;
         }
 
         Ok(())
