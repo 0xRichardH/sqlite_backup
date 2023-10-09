@@ -2,6 +2,30 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.3.0 - 2023-10-09
+#### Bug Fixes
+- **(ci)** trigger docker image building whenever build/version chagned (#21) - (944e3b5) - Richard Hao
+- resolve the cron permission issue - (a08ed04) - Richard Hao
+#### Documentation
+- **(todo)** update todo list - (2f93e1b) - Richard Hao
+- add new todo `keep recent n backups` - (51e7548) - Richard Hao
+- update TODO - (10cb48e) - Richard Hao
+#### Features
+- **(docker)** install cron in the container - (8bd0763) - Richard Hao
+- add gpg encryption (#27) - (ac0a909) - Richard Hao
+- keep recent n backup records (#26) - (359a111) - Richard Hao
+- add nix (#25) - (086dfb6) - Richard Hao
+#### Miscellaneous Chores
+- **(ci)** update docker.yml - (7d59d01) - Richard Hao
+- **(deps)** bump aws-sdk-s3 from 0.32.0 to 0.33.0 (#28) - (c9de330) - dependabot[bot]
+- **(deps)** bump lukemathwalker/cargo-chef in /build (#29) - (e66e3fa) - dependabot[bot]
+- **(deps)** bump aws-sdk-s3 from 0.31.2 to 0.32.0 (#23) - (0134b11) - dependabot[bot]
+- **(deps)** bump clap from 4.4.5 to 4.4.6 (#22) - (372325c) - dependabot[bot]
+- release new docker image - (9fed1ec) - Richard Hao
+- test if `docker builder` ci works - (f3fa2e9) - Richard Hao
+
+- - -
+
 ## v0.2.0 - 2023-09-26
 #### Documentation
 - update todo - (e38ffe7) - Richard Hao
