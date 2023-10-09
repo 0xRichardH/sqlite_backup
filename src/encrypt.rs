@@ -15,16 +15,16 @@ pub fn gpg_filename(filename: &str) -> String {
 // gpg -o backup.tar.gz -d backup.tar.gz.gpg
 pub fn gpg_encrypt(input: &str, output: &str, password: &str) -> Result<()> {
     // 1. read source file to buffer
-    let mut f = File::open(input).context("open source file to encrypt")?;
-    let mut buf = Vec::new();
-    f.read_to_end(&mut buf)
+    let mut in_f = File::open(input).context("open source file to encrypt")?;
+    let mut in_buf = Vec::new();
+    in_f.read_to_end(&mut in_buf)
         .context("read source file to buffer to encrypt")?;
 
     // 2. encryt with password
     let mut rng = rand::thread_rng();
     let s2k = StringToKey::new_default(&mut rng);
-    let msg =
-        Message::new_literal_bytes(input, &buf).compress(pgp::types::CompressionAlgorithm::ZLIB)?;
+    let msg = Message::new_literal_bytes(input, &in_buf)
+        .compress(pgp::types::CompressionAlgorithm::ZLIB)?;
     let encrypted = msg
         .encrypt_with_password(&mut rng, s2k, SymmetricKeyAlgorithm::AES128, || {
             password.into()

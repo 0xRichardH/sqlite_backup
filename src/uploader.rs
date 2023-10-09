@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::ffi::OsString;
 
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -13,11 +13,12 @@ use time::format_description;
 use crate::{
     argument,
     config::{self},
+    encrypt,
 };
 
 #[async_trait]
 pub trait Uploader {
-    async fn upload_object(&self, src_path: PathBuf, src_name: &str) -> Result<()>;
+    async fn upload_object(&self, src_path: &str, src_name: &str) -> Result<()>;
     async fn retain(&self, data_retention: u8, src_name: &str) -> Result<()>;
 }
 
@@ -26,6 +27,7 @@ pub struct R2Uploader {
     bucket: String,
     project_name: String,
     app_env: String,
+    gpg_passphrase: Option<OsString>,
 }
 
 impl R2Uploader {
@@ -55,21 +57,30 @@ impl R2Uploader {
             bucket: cfg.bucket_name.clone(),
             project_name: arg.project_name.clone(),
             app_env: cfg.app_env.to_string(),
+            gpg_passphrase: cfg.gpg_passphrase.clone(),
         }
     }
 }
 
 #[async_trait]
 impl Uploader for R2Uploader {
-    async fn upload_object(&self, src_path: PathBuf, src_name: &str) -> Result<()> {
-        let body = ByteStream::from_path(src_path)
-            .await
-            .context("create file stream")?;
+    async fn upload_object(&self, src_path: &str, src_name: &str) -> Result<()> {
         let key = uuid::Uuid::new_v4();
         let format = format_description::parse("[year]-[month]-[day]")?;
         let today = time::OffsetDateTime::now_utc().format(&format)?;
         let key_prefix = self.object_key_prefix(src_name);
-        let object_key = format!("{key_prefix}/{today}__{key}");
+        let mut object_key = format!("{key_prefix}/{today}__{key}");
+        let mut src_filepath = src_path.to_string();
+
+        // check gpg passphrase
+        if self.gpg_passphrase.is_some() {
+            object_key = encrypt::gpg_filename(&object_key);
+            src_filepath = encrypt::gpg_filename(&src_filepath);
+        }
+
+        let body = ByteStream::from_path(src_filepath)
+            .await
+            .context("create file stream")?;
 
         self.client
             .put_object()

@@ -4,7 +4,6 @@ use sqlite_backup::{
     argument::{self, Argument},
     backup::{Backup, SqliteBackup, SqliteSourceFile},
     config::Config,
-    encrypt,
     uploader::{R2Uploader, Uploader},
 };
 
@@ -25,11 +24,11 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
 
     // backup data
     let src_file = SqliteSourceFile::from(arg.db.as_str()).context("parse source path")?;
-    let dest = tmp_dir.path().join(src_file.filename);
+    let dest = tmp_dir.path().join(src_file.filename).display().to_string();
     SqliteBackup::new(
         cfg,
         src_file.path.display().to_string(),
-        dest.display().to_string(),
+        dest.clone(),
         |p| {
             println!(
                 "---Progress---- pagecount: {}, remaining: {}",
@@ -40,18 +39,11 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
     .backup()
     .context("backup source to destination")?;
 
-    // get source file name
-    let src_filename = if cfg.gpg_passphrase.is_some() {
-        encrypt::gpg_filename(src_file.filename)
-    } else {
-        src_file.filename.to_string()
-    };
-
     // upload
     let uploader = R2Uploader::new(arg, cfg).await;
     let (upload_res, retain_res) = tokio::join!(
-        uploader.upload_object(dest, src_filename.as_str()),
-        uploader.retain(arg.data_retention, src_filename.as_str())
+        uploader.upload_object(&dest, src_file.filename),
+        uploader.retain(arg.data_retention, src_file.filename),
     );
     upload_res?;
     retain_res?;
