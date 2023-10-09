@@ -8,6 +8,8 @@
 - [x] Update backup file to ~Google Drive~ **Cloudflare R2**
 - [x] Add prefix to the R2 file `backup/prod/project_name`
 - [x] Keep recent `n` backups
-- [ ] Add GPG encryption support
+- [x] Add GPG encryption support
+  - encrypt: `add env variable GPG_PASSPHRASE`
+  - decrypt: `gpg -o backup.tar.gz -d backup.tar.gz.gpg`
 - [ ] Beauty the output log
 - [ ] Restore SQLite backup (low priority, because we could run `sqlite_backup` backward to restore the data)
