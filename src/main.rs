@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use rusqlite::Connection;
 use sqlite_backup::{
     argument::{self, Argument},
     backup::{Backup, SqliteBackup, SqliteSourceFile},
@@ -26,14 +25,18 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
 
     // backup data
     let src_file = SqliteSourceFile::from(arg.db.as_str()).context("parse source path")?;
-    let src_conn = Connection::open(src_file.path).context("create source connection")?;
     let dest = tmp_dir.path().join(src_file.filename);
-    SqliteBackup::new(cfg, src_conn, dest.display().to_string(), |p| {
-        println!(
-            "---Progress---- pagecount: {}, remaining: {}",
-            p.pagecount, p.remaining
-        )
-    })
+    SqliteBackup::new(
+        cfg,
+        src_file.path.display().to_string(),
+        dest.display().to_string(),
+        |p| {
+            println!(
+                "---Progress---- pagecount: {}, remaining: {}",
+                p.pagecount, p.remaining
+            )
+        },
+    )
     .backup()
     .context("backup source to destination")?;
 
