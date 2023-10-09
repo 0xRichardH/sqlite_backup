@@ -6,7 +6,7 @@ use rusqlite::{
     Connection,
 };
 
-use crate::errors::SqliteBackupError;
+use crate::{config::Config, encrypt, errors::SqliteBackupError};
 
 pub trait Backup {
     fn backup(&self) -> Result<()>;
@@ -20,52 +20,75 @@ pub struct SqliteSourceFile<'a> {
 impl<'a> SqliteSourceFile<'a> {
     pub fn from(src_path: &'a str) -> Result<Self> {
         let path = Path::new(src_path);
-        let filename = convert_os_str_result_to_str(path.file_name())?;
+        let filename = Self::convert_os_str_result_to_str(path.file_name())?;
 
         Ok(Self { path, filename })
     }
-}
 
-fn convert_os_str_result_to_str(result: Option<&OsStr>) -> Result<&str> {
-    if result.is_none() {
+    fn convert_os_str_result_to_str(result: Option<&OsStr>) -> Result<&str> {
+        if result.is_none() {
+            bail!(SqliteBackupError::SourceFileError(
+                "failed to parse source file".to_string()
+            ));
+        }
+        if let Some(s) = result.unwrap().to_str() {
+            return Ok(s);
+        }
+
         bail!(SqliteBackupError::SourceFileError(
-            "failed to parse source file".to_string()
+            "failed to convert source file to str".to_string()
         ));
     }
-    if let Some(s) = result.unwrap().to_str() {
-        return Ok(s);
-    }
-
-    bail!(SqliteBackupError::SourceFileError(
-        "failed to convert source file to str".to_string()
-    ));
 }
 
-pub struct SqliteBackup {
-    src_conn: rusqlite::Connection,
+pub struct SqliteBackup<'a> {
+    cfg: &'a Config,
+    src: String,
     dest: String,
     progress: fn(Progress),
 }
 
-impl SqliteBackup {
-    pub fn new(src_conn: rusqlite::Connection, dest: String, progress: fn(Progress)) -> Self {
+impl<'a> SqliteBackup<'a> {
+    pub fn new(cfg: &'a Config, src: String, dest: String, progress: fn(Progress)) -> Self {
         Self {
-            src_conn,
+            cfg,
+            src,
             dest,
             progress,
         }
     }
 }
 
-impl Backup for SqliteBackup {
+impl<'a> Backup for SqliteBackup<'a> {
     fn backup(&self) -> Result<()> {
+        // 1. backup the db to file
+        let src_conn = Connection::open(self.src.clone()).context("create source connection")?;
         let mut dest_conn =
             Connection::open(self.dest.clone()).context("open backup destination")?;
         let online_backup =
-            backup::Backup::new(&self.src_conn, &mut dest_conn).context("create online backup")?;
+            backup::Backup::new(&src_conn, &mut dest_conn).context("create online backup")?;
         online_backup
             .run_to_completion(5, Duration::from_millis(250), Some(self.progress))
             .context("run backup")?;
+
+        // 2. encrypt the dest file if GPG_PASSPHRASE is configured
+        if self.cfg.gpg_passphrase.is_some() {
+            let encrypted_dest = encrypt::gpg_filename(&self.dest);
+            let passphrase = self
+                .cfg
+                .gpg_passphrase
+                .clone()
+                .unwrap()
+                .to_string_lossy()
+                .to_string();
+
+            encrypt::gpg_encrypt(
+                self.dest.as_str(),
+                encrypted_dest.as_str(),
+                passphrase.as_str(),
+            )
+            .context("gpg encrypt")?;
+        }
 
         Ok(())
     }
@@ -74,6 +97,8 @@ impl Backup for SqliteBackup {
 #[cfg(test)]
 mod tests {
     use tempfile::tempdir;
+
+    use crate::config;
 
     use super::*;
 
@@ -86,18 +111,20 @@ mod tests {
 
     #[test]
     fn it_should_backup_db() -> Result<()> {
-        // create source connection
-        let src_conn = Connection::open_in_memory()?;
-
-        // seed
-        seed_person_table(&src_conn)?;
-
         // create temp destination path
         let tmp_dir = tempdir()?;
-        let dest = tmp_dir.path().join("backup.db").display().to_string();
+        let src = tmp_dir.path().join("backup.db").display().to_string();
+        let dest = tmp_dir.path().join("source.db").display().to_string();
+
+        // create source connection
+        let mut src_conn = Connection::open(src.clone())?;
+
+        // seed
+        seed_person_table(&mut src_conn)?;
 
         // backup
-        let backup = SqliteBackup::new(src_conn, dest.clone(), |p| {
+        let cfg = config::Config::load()?;
+        let backup = SqliteBackup::new(&cfg, src.clone(), dest.clone(), |p| {
             println!(
                 "---Progress---- pagecount: {}, remaining: {}",
                 p.pagecount, p.remaining
@@ -120,7 +147,7 @@ mod tests {
         Ok(())
     }
 
-    fn seed_person_table(conn: &Connection) -> Result<()> {
+    fn seed_person_table(conn: &mut Connection) -> Result<()> {
         // create table
         conn.execute(
             "

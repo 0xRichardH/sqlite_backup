@@ -3,7 +3,6 @@ use std::{error::Error, fmt::Display};
 #[derive(Debug)]
 pub enum SqliteBackupError {
     SourceFileError(String),
-    NoSourceFileError,
 }
 
 impl Error for SqliteBackupError {}
@@ -14,7 +13,6 @@ impl Display for SqliteBackupError {
             SqliteBackupError::SourceFileError(source) => {
                 write!(f, "Source file error: {}", source)
             }
-            SqliteBackupError::NoSourceFileError => write!(f, "No source path provided."),
         }
     }
 }
