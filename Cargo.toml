@@ -12,9 +12,11 @@ aws-config = "0.56.1"
 aws-sdk-s3 = "0.33.0"
 clap = { version = "4.4.6", features = ["derive"] }
 dotenvy = "0.15.7"
+log = "0.4.20"
 pgp = "0.10.2"
 rand = "0.8.5"
 rusqlite = { version = "0.29.0", features = ["backup"] }
+simple_logger = "4.2.0" 
 tempfile = "3.8.0"
 time = { version = "0.3.29", features = ["formatting"] }
 tokio = { version = "1.33.0", features = ["full"] }

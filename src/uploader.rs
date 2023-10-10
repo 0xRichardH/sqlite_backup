@@ -85,11 +85,12 @@ impl Uploader for R2Uploader {
         self.client
             .put_object()
             .bucket(self.bucket.clone())
-            .key(object_key)
+            .key(&object_key)
             .body(body)
             .send()
             .await
             .context("upload object to r2")?;
+        log::info!("upload object to r2 success {}", object_key);
 
         Ok(())
     }
@@ -126,6 +127,8 @@ impl Uploader for R2Uploader {
                 })
                 .collect::<Vec<_>>();
             self.delete_objects(deleted_objects.clone()).await?;
+
+            log::info!("deleted {} objects from r2", deleted_objects.len());
         }
 
         Ok(())

@@ -1,7 +1,7 @@
 use dotenvy::{dotenv, from_filename_override};
 use std::{env, ffi::OsString, fmt::Display};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 #[derive(PartialEq, Debug)]
 pub enum AppEnv {
@@ -44,16 +44,16 @@ impl Config {
             _ => AppEnv::Dev,
         };
 
-        println!("Running in {app_env} mode");
+        log::info!("Running in {app_env} mode");
 
         match app_env {
             AppEnv::Dev => {
                 // load environment variables from .env file
-                dotenv().expect(".env file not found");
+                dotenv().context(".env file not found")?;
             }
 
             AppEnv::Test => {
-                from_filename_override(".env.test").expect(".env.test file not found");
+                from_filename_override(".env.test").context(".env.test file not found")?;
             }
 
             _ => {
