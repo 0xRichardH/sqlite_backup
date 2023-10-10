@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.4.1 - 2023-10-10
+#### Bug Fixes
+- **(ci)** able to trigger workflow within a workflow (#37) - (6365ea8) - Richard Hao
+- build docker image on tags created (#34) - (80feb5c) - Richard Hao
+#### Miscellaneous Chores
+- Revert "release(version): Bump to v0.4.1 (#35)" (#36) - (56d520a) - Richard Hao
+#### Releases
+- **(version)** Bump to v0.4.1 (#35) - (e069389) - github-actions[bot]
+
+- - -
+
 ## v0.4.0 - 2023-10-10
 #### Features
 - beauty the log (#32) - (2d6cfe0) - Richard Hao
