@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.4.1 - 2023-10-10
+#### Bug Fixes
+- build docker image on tags created (#34) - (80feb5c) - Richard Hao
+
+- - -
+
 ## v0.4.0 - 2023-10-10
 #### Features
 - beauty the log (#32) - (2d6cfe0) - Richard Hao
