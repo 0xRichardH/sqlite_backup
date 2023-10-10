@@ -28,3 +28,4 @@ jobs:
         with:
           body_path: ./docs/LATEST_CHANGELOG.md
           tag_name: ${{ steps.vars.outputs.version }}
+          token: ${{ secrets.PAT }}
