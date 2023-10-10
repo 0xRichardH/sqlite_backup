@@ -11,5 +11,4 @@
 - [x] Add GPG encryption support
   - encrypt: `add env variable GPG_PASSPHRASE`
   - decrypt: `gpg -o backup.tar.gz -d backup.tar.gz.gpg`
-- [ ] Beauty the output log
-- [ ] Restore SQLite backup (low priority, because we could run `sqlite_backup` backward to restore the data)
+- [x] Beauty the output log

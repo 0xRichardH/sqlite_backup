@@ -8,12 +8,24 @@ use sqlite_backup::{
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
+
+    log::info!("================================================================================");
+    if let Err(err) = execute().await {
+        log::error!("{:?}", err)
+    }
+    log::info!("================================================================================");
+}
+
+async fn execute() -> Result<()> {
+    log::info!("Starting backup...");
+
     let cfg = Config::load().context("load env vars")?;
     let args = Argument::parse();
     run(&args, &cfg).await?;
 
-    println!("Done");
+    log::info!("Ending backup...");
 
     Ok(())
 }
@@ -30,9 +42,10 @@ async fn run(arg: &argument::Argument, cfg: &Config) -> Result<()> {
         src_file.path.display().to_string(),
         dest.clone(),
         |p| {
-            println!(
+            log::info!(
                 "---Progress---- pagecount: {}, remaining: {}",
-                p.pagecount, p.remaining
+                p.pagecount,
+                p.remaining
             )
         },
     )
