@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.4.0 - 2023-10-10
+#### Features
+- beauty the log (#32) - (2d6cfe0) - Richard Hao
+#### Miscellaneous Chores
+- **(deps)** bump tokio from 1.32.0 to 1.33.0 (#31) - (9906651) - dependabot[bot]
+
+- - -
+
 ## v0.3.0 - 2023-10-09
 #### Bug Fixes
 - **(ci)** trigger docker image building whenever build/version chagned (#21) - (944e3b5) - Richard Hao
