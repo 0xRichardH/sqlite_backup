@@ -1,7 +1,7 @@
 ####################################################################################################
 ## Builder
 ####################################################################################################
-FROM lukemathwalker/cargo-chef:latest-rust-1.73.0-buster AS chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.75.0-buster AS chef
 WORKDIR /app
 
 FROM chef AS planner
